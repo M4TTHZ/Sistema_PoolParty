@@ -1,0 +1,233 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  /* PoolParty Color Palette */
+  --aqua: #00bcd4;
+  --aqua-dark: #0097a7;
+  --aqua-light: #e0f7fa;
+  --navy: #0a1628;
+  --navy-mid: #112240;
+  --gold: #f5c842;
+  --sand: #fdf6e3;
+  --white: #ffffff;
+  --gray-100: #f4f6f8;
+  --gray-200: #e8ecf0;
+  --gray-400: #9aa3ae;
+  --gray-600: #5a6472;
+  --gray-800: #2c3440;
+  --success: #26a69a;
+  --danger: #ef5350;
+  --warning: #ffa726;
+
+  /* Tailwind semantic colors using PoolParty palette */
+  --primary: var(--aqua);
+  --primary-foreground: var(--white);
+  --sidebar-primary: var(--aqua);
+  --sidebar-primary-foreground: var(--white);
+  --background: var(--gray-100);
+  --foreground: var(--gray-800);
+  --card: var(--white);
+  --card-foreground: var(--gray-800);
+  --popover: var(--white);
+  --popover-foreground: var(--gray-800);
+  --secondary: var(--gold);
+  --secondary-foreground: var(--gray-800);
+  --muted: var(--gray-200);
+  --muted-foreground: var(--gray-600);
+  --accent: var(--aqua);
+  --accent-foreground: var(--white);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--white);
+  --border: var(--gray-200);
+  --input: var(--white);
+  --ring: var(--aqua);
+  --chart-1: var(--aqua);
+  --chart-2: var(--gold);
+  --chart-3: var(--success);
+  --chart-4: var(--danger);
+  --chart-5: var(--aqua-dark);
+  --sidebar: var(--navy);
+  --sidebar-foreground: var(--white);
+  --sidebar-accent: var(--gold);
+  --sidebar-accent-foreground: var(--gray-800);
+  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --sidebar-ring: var(--aqua);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+    font-family: "DM Sans", sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Playfair Display", serif;
+    @apply font-semibold;
+  }
+
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .flex {
+    @apply min-w-0 min-h-0;
+  }
+
+  button {
+    @apply transition-all duration-250;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-250 cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:opacity-90;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:opacity-90;
+  }
+
+  .btn-outline {
+    @apply border border-border bg-transparent text-foreground hover:bg-muted;
+  }
+
+  .card {
+    @apply bg-card text-card-foreground rounded-lg shadow-sm p-6;
+  }
+
+  .card-header {
+    @apply flex justify-between items-center mb-4;
+  }
+
+  .card-body {
+    @apply space-y-4;
+  }
+
+  .stat-card {
+    @apply bg-card text-card-foreground rounded-lg shadow-sm p-6;
+  }
+
+  .stat-value {
+    @apply text-3xl font-bold text-primary;
+  }
+
+  .stat-label {
+    @apply text-sm text-muted-foreground mt-2;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+
+  .table-row {
+    @apply border-b border-border hover:bg-muted/50 transition-colors;
+  }
+
+  .table-cell {
+    @apply px-4 py-3;
+  }
+}
+
+@layer utilities {
+  .text-aqua {
+    color: var(--aqua);
+  }
+
+  .bg-aqua {
+    background-color: var(--aqua);
+  }
+
+  .hover\:bg-aqua-dark:hover {
+    background-color: var(--aqua-dark);
+  }
+
+  .border-aqua {
+    border-color: var(--aqua);
+  }
+
+  .text-navy {
+    color: var(--navy);
+  }
+
+  .bg-navy {
+    background-color: var(--navy);
+  }
+
+  .text-gold {
+    color: var(--gold);
+  }
+
+  .bg-gold {
+    background-color: var(--gold);
+  }
+
+  .text-success {
+    color: var(--success);
+  }
+
+  .bg-success {
+    background-color: var(--success);
+  }
+
+  .text-danger {
+    color: var(--danger);
+  }
+
+  .bg-danger {
+    background-color: var(--danger);
+  }
+
+  .text-warning {
+    color: var(--warning);
+  }
+
+  .bg-warning {
+    background-color: var(--warning);
+  }
+}

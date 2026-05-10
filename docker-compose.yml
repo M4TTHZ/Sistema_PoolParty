@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  # ── MySQL ──────────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: poolparty_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Poolparty123!}
+      MYSQL_DATABASE:      ${MYSQL_DATABASE:-poolparty}
+      MYSQL_USER:          ${MYSQL_USER:-poolparty}
+      MYSQL_PASSWORD:      ${MYSQL_PASSWORD:-Poolparty123!}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d   # optional SQL seeds
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-Poolparty123!}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - poolparty_net
+
+  # ── API + Frontend ─────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: poolparty_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV:     production
+      PORT:         3000
+      DATABASE_URL: mysql://${MYSQL_USER:-poolparty}:${MYSQL_PASSWORD:-Poolparty123!}@db:3306/${MYSQL_DATABASE:-poolparty}
+      LOG_LEVEL:    ${LOG_LEVEL:-info}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - uploads_data:/app/uploads   # persist generated PDFs
+    networks:
+      - poolparty_net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/trpc/system.health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  db_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+networks:
+  poolparty_net:
+    driver: bridge
