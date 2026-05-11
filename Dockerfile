@@ -5,11 +5,9 @@ WORKDIR /app
 
 RUN npm install -g pnpm
 
-# Copy manifests (lockfile optional — Railway may not have it)
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 
-# Copy source and build
 COPY . .
 RUN pnpm build
 
@@ -21,10 +19,14 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --prod --frozen-lockfile 2>/dev/null || pnpm install --prod
+RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 
-# Copy only compiled output
+# Compiled app
 COPY --from=builder /app/dist ./dist
+
+# Drizzle config and schema (needed by drizzle-kit push in pre-deploy)
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/drizzle ./drizzle
 
 # Uploads folder for generated PDFs
 RUN mkdir -p uploads/reservas
