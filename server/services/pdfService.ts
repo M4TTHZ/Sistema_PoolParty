@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import PDFDocument from "pdfkit";
 import { pdfLogger } from "../utils/logger";
 
 export interface PdfReservationData {
@@ -40,7 +41,7 @@ export async function generateReservationPdf(
   data: PdfReservationData
 ): Promise<string | null> {
   try {
-    const PDFDocument = (await import("pdfkit")).default;
+    
 
     const uploadsDir = path.resolve(process.cwd(), "uploads", "reservas");
     if (!fs.existsSync(uploadsDir)) {
