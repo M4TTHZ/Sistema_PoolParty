@@ -218,7 +218,13 @@ export async function generateReservationPdf(
 
     return relativeUrl;
   } catch (error) {
-    pdfLogger.error({ err: error, reservationId: data.reservation.id }, "PDF generation failed");
-    return null;
-  }
+  pdfLogger.error({ 
+    err: error, 
+    reservationId: data.reservation.id,
+    message: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined
+  }, "PDF generation failed");
+  console.error("PDF ERROR DETALHADO:", error);
+  return null;
+}
 }
