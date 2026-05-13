@@ -24,16 +24,18 @@ RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 # Compiled app
 COPY --from=builder /app/dist ./dist
 
-# Drizzle config and schema (needed by drizzle-kit push in pre-deploy)
+# Drizzle config and schema
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/drizzle ./drizzle
 
-# Uploads folder for generated PDFs
+# Uploads folder com permissão correta ANTES de trocar de usuário
 RUN mkdir -p uploads/reservas
 
-# Security: non-root user
+# Non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 RUN chown -R appuser:appgroup /app
+RUN chmod -R 775 /app/uploads
+
 USER appuser
 
 EXPOSE 3000
