@@ -18,24 +18,23 @@ WORKDIR /app
 
 RUN npm install -g pnpm
 
+# Install ALL deps (including drizzle-kit and tsx needed for pre-deploy)
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 
 # Compiled app
 COPY --from=builder /app/dist ./dist
 
-# Drizzle config and schema
+# Drizzle config and schema (needed by drizzle-kit push in pre-deploy)
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/drizzle ./drizzle
 
-# Uploads folder com permissão correta ANTES de trocar de usuário
+# Uploads folder for generated PDFs
 RUN mkdir -p uploads/reservas
 
-# Non-root user
+# Security: non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 RUN chown -R appuser:appgroup /app
-RUN chmod -R 775 /app/uploads
-
 USER appuser
 
 EXPOSE 3000

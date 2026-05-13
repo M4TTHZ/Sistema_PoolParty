@@ -13,8 +13,9 @@ import { toast } from "sonner";
 import {
   CalendarPlus, Pencil, Trash2, CheckCircle, XCircle,
   ChevronLeft, ChevronRight, Package, Gamepad2, StickyNote,
-  FileDown, Eye,
+  FileDown,
 } from "lucide-react";
+import { generateReservationPdfClient } from "@/lib/pdfGenerator";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 type Status = "confirmed" | "cancelled" | "completed";
@@ -210,6 +211,7 @@ export default function Reservations() {
   const { data: reservedDates = [] } = trpc.reservations.reservedDates.useQuery();
   const { data: clients } = trpc.clients.list.useQuery();
   const { data: stockItems } = trpc.stock.list.useQuery();
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const utils = trpc.useUtils();
 
   function invalidateAll() {
@@ -308,6 +310,43 @@ export default function Reservations() {
     const pgTotal = form.pgEnabled && form.pgPrice ? parseFloat(form.pgPrice) || 0 : 0;
     return rental + itemsTotal + pgTotal;
   }, [form, stockItems]);
+
+  async function handleDownloadPdf(reservationId: number) {
+    setDownloadingId(reservationId);
+    try {
+      const data = await utils.reservations.getById.fetch({ id: reservationId });
+      if (!data) { toast.error("Reserva não encontrada."); return; }
+
+      const client = clients?.find((c) => c.id === data.clientId);
+      if (!client) { toast.error("Cliente não encontrado."); return; }
+
+      generateReservationPdfClient({
+        reservation: {
+          id: data.id,
+          rentalPrice: data.rentalPrice ?? 0,
+          totalAmount: data.totalAmount ?? 0,
+          observations: data.observations,
+        },
+        client: { name: client.name, cpfCnpj: client.cpfCnpj },
+        dates: data.dates ?? [],
+        items: (data.items ?? []).map((item) => ({
+          name: stockItems?.find((s) => s.id === item.stockItemId)?.name ?? `Item #${item.stockItemId}`,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+        })),
+        playground: data.playground
+          ? { startTime: data.playground.startTime, endTime: data.playground.endTime, price: data.playground.price }
+          : null,
+      });
+
+      toast.success("PDF gerado com sucesso!");
+    } catch (e) {
+      toast.error("Erro ao gerar PDF.");
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -446,29 +485,16 @@ export default function Reservations() {
                             <XCircle size={13} /> Cancelar
                           </Button>
                         )}
-                        {(r as { pdfUrl?: string | null }).pdfUrl && (
-                          <>
-                            <a
-                              href={`${window.location.origin}${(r as { pdfUrl?: string | null }).pdfUrl}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Button size="sm" variant="outline"
-                                className="flex items-center gap-1 text-aqua border-aqua/50 hover:bg-aqua/5">
-                                <Eye size={13} /> Ver PDF
-                              </Button>
-                            </a>
-                            <a
-                              href={`${window.location.origin}${(r as { pdfUrl?: string | null }).pdfUrl}`}
-                              download
-                            >
-                              <Button size="sm" variant="outline"
-                                className="flex items-center gap-1 text-navy border-navy/30 hover:bg-navy/5">
-                                <FileDown size={13} /> Baixar
-                              </Button>
-                            </a>
-                          </>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadPdf(r.id)}
+                          disabled={downloadingId === r.id}
+                          className="flex items-center gap-1 text-aqua border-aqua/50 hover:bg-aqua/5"
+                        >
+                          <FileDown size={13} />
+                          {downloadingId === r.id ? "Gerando..." : "PDF"}
+                        </Button>
                         <Button size="sm" variant="outline"
                           onClick={() => setDeletingId(r.id)}
                           className="flex items-center gap-1 text-red-500 border-red-300 hover:bg-red-50">

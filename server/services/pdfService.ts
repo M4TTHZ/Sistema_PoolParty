@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import PDFDocument from "pdfkit";
 import { pdfLogger } from "../utils/logger";
 
 export interface PdfReservationData {
@@ -41,7 +40,7 @@ export async function generateReservationPdf(
   data: PdfReservationData
 ): Promise<string | null> {
   try {
-    
+    const PDFDocument = (await import("pdfkit")).default;
 
     const uploadsDir = path.resolve(process.cwd(), "uploads", "reservas");
     if (!fs.existsSync(uploadsDir)) {
@@ -219,13 +218,7 @@ export async function generateReservationPdf(
 
     return relativeUrl;
   } catch (error) {
-  pdfLogger.error({ 
-    err: error, 
-    reservationId: data.reservation.id,
-    message: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined
-  }, "PDF generation failed");
-  console.error("PDF ERROR DETALHADO:", error);
-  return null;
-}
+    pdfLogger.error({ err: error, reservationId: data.reservation.id }, "PDF generation failed");
+    return null;
+  }
 }
