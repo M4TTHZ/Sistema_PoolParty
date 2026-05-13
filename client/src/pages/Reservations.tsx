@@ -449,7 +449,7 @@ export default function Reservations() {
                         {(r as { pdfUrl?: string | null }).pdfUrl && (
                           <>
                             <a
-                              href={`http://localhost:3000${(r as { pdfUrl?: string | null }).pdfUrl}`}
+                              href={`${window.location.origin}${(r as { pdfUrl?: string | null }).pdfUrl}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -459,7 +459,7 @@ export default function Reservations() {
                               </Button>
                             </a>
                             <a
-                              href={`http://localhost:3000${(r as { pdfUrl?: string | null }).pdfUrl}`}
+                              href={`${window.location.origin}${(r as { pdfUrl?: string | null }).pdfUrl}`}
                               download
                             >
                               <Button size="sm" variant="outline"
