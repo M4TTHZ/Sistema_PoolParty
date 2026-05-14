@@ -64,7 +64,7 @@ export const AUTH_COOKIE = COOKIE_NAME;
 export function getCookieOptions(maxAge: number) {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
     sameSite: "lax" as const,
     maxAge,
     path: "/",
