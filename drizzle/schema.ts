@@ -14,7 +14,17 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// ── Clientes ──────────────────────────────────────────────────────────────
+// ── Admin (único usuário do sistema) ─────────────────────────────────────────
+export const admin = mysqlTable("admin", {
+  id: int("id").autoincrement().primaryKey(),
+  username: varchar("username", { length: 64 }).notNull().unique(),
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type Admin = typeof admin.$inferSelect;
+export type InsertAdmin = typeof admin.$inferInsert;
+
+
 export const clients = mysqlTable("clients", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),

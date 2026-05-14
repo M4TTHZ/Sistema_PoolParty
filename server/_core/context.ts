@@ -1,48 +1,34 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import type { User } from "../../drizzle/schema";
-import { sdk } from "./sdk";
+import { verifyToken, getAdminUser, AUTH_COOKIE } from "../services/authService";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
-  user: User | null;
-};
-
-// Usuário local fixo para desenvolvimento sem OAuth
-const LOCAL_DEV_USER: User = {
-  id: 1,
-  openId: "local-dev",
-  name: "Usuário Local",
-  email: "dev@localhost",
-  loginMethod: "local",
-  role: "admin",
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  lastSignedIn: new Date(),
+  user: { id: number; username: string; role: "admin" } | null;
 };
 
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
-  // Em desenvolvimento local (sem OAuth configurado), usa usuário fixo
-  if (!process.env.OAUTH_SERVER_URL) {
-    return {
-      req: opts.req,
-      res: opts.res,
-      user: LOCAL_DEV_USER,
-    };
+  const token = opts.req.cookies?.[AUTH_COOKIE];
+
+  if (!token) {
+    return { req: opts.req, res: opts.res, user: null };
   }
 
-  let user: User | null = null;
-  try {
-    user = await sdk.authenticateRequest(opts.req);
-  } catch {
-    user = null;
+  const payload = await verifyToken(token);
+  if (!payload) {
+    return { req: opts.req, res: opts.res, user: null };
+  }
+
+  const adminUser = await getAdminUser();
+  if (!adminUser || adminUser.id !== payload.id) {
+    return { req: opts.req, res: opts.res, user: null };
   }
 
   return {
     req: opts.req,
     res: opts.res,
-    user,
+    user: { id: adminUser.id, username: adminUser.username, role: "admin" },
   };
 }

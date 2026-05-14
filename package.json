@@ -86,7 +86,11 @@
     "wouter": "^3.3.5",
     "zod": "^4.1.12",
     "jspdf": "^2.5.2",
-    "jspdf-autotable": "^3.8.4"
+    "jspdf-autotable": "^3.8.4",
+    "bcryptjs": "^2.4.3",
+    "@types/bcryptjs": "^2.4.6",
+    "cookie-parser": "^1.4.7",
+    "@types/cookie-parser": "^1.4.8"
   },
   "devDependencies": {
     "@builder.io/vite-plugin-jsx-loc": "^0.1.1",

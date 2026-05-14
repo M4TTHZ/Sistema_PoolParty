@@ -6,17 +6,11 @@ import { clientsRouter } from "./routers/clients";
 import { stockRouter } from "./routers/stock";
 import { reservationsRouter } from "./routers/reservations";
 import { maintenanceRouter } from "./routers/maintenance";
+import { authRouter } from "./routers/auth";
 
 export const appRouter = router({
   system: systemRouter,
-  auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return { success: true } as const;
-    }),
-  }),
+  auth: authRouter,
   clients: clientsRouter,
   stock: stockRouter,
   reservations: reservationsRouter,
