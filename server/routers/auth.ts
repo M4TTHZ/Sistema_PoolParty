@@ -34,8 +34,7 @@ export const authRouter = router({
 
       const token = await signToken({ id: adminUser.id, username: adminUser.username });
 
-      // Seta cookie httpOnly (7 dias)
-      ctx.res.cookie(AUTH_COOKIE, token, getCookieOptions(60 * 60 * 24 * 7));
+      ctx.res.cookie(AUTH_COOKIE, token, getCookieOptions(1000 * 60 * 60 * 24 * 365));
 
       routerLogger.info({ username: adminUser.username }, "Login realizado");
 
