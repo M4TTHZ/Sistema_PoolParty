@@ -28,7 +28,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const { data: user, isLoading } = trpc.auth.me.useQuery(undefined, {
     retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 60,      // 1 hora — não refaz a query desnecessariamente
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
   });
 
   const logoutMutation = trpc.auth.logout.useMutation({
