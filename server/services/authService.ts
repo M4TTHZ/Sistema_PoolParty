@@ -64,9 +64,9 @@ export const AUTH_COOKIE = COOKIE_NAME;
 export function getCookieOptions(maxAge: number) {
   return {
     httpOnly: true,
-    secure: true,
-    sameSite: "none" as const,
-    maxAge,        // ← recebe em ms
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    maxAge,
     path: "/",
   };
 }

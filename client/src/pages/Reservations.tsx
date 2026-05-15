@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,9 +13,135 @@ import { toast } from "sonner";
 import {
   CalendarPlus, Pencil, Trash2, CheckCircle, XCircle,
   ChevronLeft, ChevronRight, Package, Gamepad2, StickyNote,
-  FileDown,
+  FileDown, Search, X,
 } from "lucide-react";
 import { generateReservationPdfClient } from "@/lib/pdfGenerator";
+
+// ── SearchableSelect ───────────────────────────────────────────────────────
+interface SearchableOption { value: string; label: string; sublabel?: string }
+
+function SearchableSelect({
+  options,
+  value,
+  onChange,
+  placeholder = "Buscar...",
+  disabled = false,
+  required = false,
+}: {
+  options: SearchableOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  required?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  const selected = options.find((o) => o.value === value);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return options;
+    const q = query.toLowerCase();
+    return options.filter(
+      (o) => o.label.toLowerCase().includes(q) || o.sublabel?.toLowerCase().includes(q)
+    );
+  }, [options, query]);
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  function select(val: string) {
+    onChange(val);
+    setOpen(false);
+    setQuery("");
+  }
+
+  function clear(e: React.MouseEvent) {
+    e.stopPropagation();
+    onChange("");
+    setQuery("");
+  }
+
+  return (
+    <div ref={wrapRef} className="relative">
+      {/* Trigger */}
+      <div
+        onClick={() => !disabled && setOpen((v) => !v)}
+        className={[
+          "flex items-center gap-2 w-full px-3 py-2 border rounded-lg bg-white text-sm cursor-pointer transition-colors",
+          open ? "border-aqua ring-2 ring-aqua/20" : "border-gray-300 hover:border-gray-400",
+          disabled ? "opacity-50 cursor-not-allowed bg-gray-50" : "",
+        ].join(" ")}
+      >
+        <Search size={14} className="text-gray-400 flex-shrink-0" />
+        <span className={`flex-1 truncate ${selected ? "text-gray-900" : "text-gray-400"}`}>
+          {selected ? selected.label : placeholder}
+        </span>
+        {selected && !disabled && (
+          <button type="button" onClick={clear} className="text-gray-400 hover:text-red-500 flex-shrink-0">
+            <X size={14} />
+          </button>
+        )}
+        {required && !value && (
+          <input type="text" required className="sr-only" tabIndex={-1} />
+        )}
+      </div>
+
+      {/* Dropdown */}
+      {open && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+          {/* Search input */}
+          <div className="p-2 border-b border-gray-100">
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Digitar para filtrar..."
+              className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-aqua"
+            />
+          </div>
+
+          {/* Options */}
+          <div className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-400 text-center">
+                Nenhum resultado encontrado.
+              </div>
+            ) : (
+              filtered.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => select(opt.value)}
+                  className={[
+                    "w-full text-left px-4 py-2.5 text-sm hover:bg-aqua/5 transition-colors flex items-center justify-between",
+                    opt.value === value ? "bg-aqua/10 text-aqua font-medium" : "text-gray-700",
+                  ].join(" ")}
+                >
+                  <span>{opt.label}</span>
+                  {opt.sublabel && (
+                    <span className="text-xs text-gray-400 ml-2">{opt.sublabel}</span>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 type Status = "confirmed" | "cancelled" | "completed";
@@ -238,6 +364,22 @@ export default function Reservations() {
     clients?.forEach((c) => m.set(c.id, c.name));
     return m;
   }, [clients]);
+
+  const clientOptions = useMemo<SearchableOption[]>(() =>
+    clients?.map((c) => ({
+      value: String(c.id),
+      label: c.name,
+      sublabel: c.cpfCnpj,
+    })) ?? []
+  , [clients]);
+
+  const stockOptions = useMemo<SearchableOption[]>(() =>
+    stockItems?.map((s) => ({
+      value: String(s.id),
+      label: s.name,
+      sublabel: formatBRL(s.unitPrice),
+    })) ?? []
+  , [stockItems]);
 
   const filtered = useMemo(() => {
     if (!reservations) return [];
@@ -526,18 +668,14 @@ export default function Reservations() {
               <label className="block text-sm font-semibold mb-1.5">
                 Cliente <span className="text-red-400">*</span>
               </label>
-              <select
+              <SearchableSelect
+                options={clientOptions}
                 value={form.clientId}
-                onChange={(e) => set("clientId", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-aqua/30 focus:border-aqua outline-none"
-                required
+                onChange={(val) => set("clientId", val)}
+                placeholder="Buscar cliente por nome ou CPF/CNPJ..."
                 disabled={!!editingId}
-              >
-                <option value="">Selecione um cliente...</option>
-                {clients?.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+                required
+              />
             </div>
 
             {/* ── 2. Calendário ── */}
@@ -626,19 +764,13 @@ export default function Reservations() {
                     return (
                       <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-gray-50 rounded-lg p-2">
                         <div className="col-span-6">
-                          <select
+                          <SearchableSelect
+                            options={stockOptions}
                             value={item.stockItemId}
-                            onChange={(e) => setItemField(idx, "stockItemId", e.target.value)}
-                            className="w-full px-2 py-1.5 border border-gray-300 rounded-lg bg-white text-xs focus:ring-2 focus:ring-aqua/30 outline-none"
+                            onChange={(val) => setItemField(idx, "stockItemId", val)}
+                            placeholder="Buscar item..."
                             required
-                          >
-                            <option value="">Selecione...</option>
-                            {stockItems?.map((s) => (
-                              <option key={s.id} value={s.id}>
-                                {s.name} — {formatBRL(s.unitPrice)}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </div>
                         <div className="col-span-2">
                           <Input
